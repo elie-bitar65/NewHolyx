@@ -73,19 +73,24 @@
         slot.onclick = () => input.click();
 
         // When file is chosen, update the slot image
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    slot.innerHTML = `<img src="${event.target.result}">`;
-                };
-                reader.readAsDataURL(file);
-            }
+        input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64Data = event.target.result;
+            slot.innerHTML = `<img src="${base64Data}">`;
+            
+            // Upload to your Render API
+            await fetch('https://your-api.onrender.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index: i, base64Data: base64Data })
+            });
         };
-
-        imageGrid.appendChild(slot);
+        reader.readAsDataURL(file);
     }
+};
 
     async function syncWithAPI() {
     try {
