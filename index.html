@@ -86,7 +86,34 @@
 
         imageGrid.appendChild(slot);
     }
+
+    async function syncWithAPI() {
+    try {
+        const response = await fetch('https://your-api-link.onrender.com');
+        const data = await response.json();
+
+        console.log("Selected Image Index:", data.imageIndex);
+
+        // Highlight or display only the image at data.imageIndex
+        const slots = document.querySelectorAll('.img-slot');
+        slots.forEach((slot, index) => {
+            if (index === data.imageIndex) {
+                slot.style.border = "4px solid red"; // Mark the "active" image
+            } else {
+                slot.style.opacity = "0.3"; // Dim the others
+            }
+        });
+
+    } catch (error) {
+        console.error("API Error:", error);
+    }
+}
+
+// Run sync every minute
+setInterval(syncWithAPI, 60000);
+syncWithAPI();
 </script>
+
 
 </body>
 </html>
