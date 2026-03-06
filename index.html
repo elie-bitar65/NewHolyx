@@ -5,72 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule & Image Loader</title>
     <style>
-        body { font-family: sans-serif; display: flex; gap: 20px; padding: 20px; }
-        .table-container { height: 90vh; overflow-y: auto; border: 1px solid #ccc; }
-        table { border-collapse: collapse; width: 200px; }
-        td, th { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; position: sticky; top: 0; }
+        body { font-family: sans-serif; display: flex; gap: 20px; padding: 20px; background: #f9f9f9; }
+        .table-container { height: 90vh; overflow-y: auto; border: 1px solid #ccc; background: white; }
+        table { border-collapse: collapse; width: 180px; }
+        td, th { border: 1px solid #ddd; padding: 6px; text-align: center; font-size: 14px; }
+        th { background-color: #eee; position: sticky; top: 0; }
         
-        .upload-container { flex-grow: 1; border-left: 2px solid #eee; padding-left: 20px; }
-        .image-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
-        .img-slot { width: 184px; height: 88px; border: 2px dashed #bbb; display: flex; 
-                    align-items: center; justify-content: center; overflow: hidden; background: #eee; }
-        .img-slot img { width: 184px; height: 88px; filter: grayscale(100%); object-fit: cover; }
+        .upload-container { flex-grow: 1; padding-left: 20px; }
+        .image-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        
+        /* The Clickable Slot */
+        .img-slot { 
+            width: 184px; height: 88px; border: 2px dashed #999; 
+            display: flex; align-items: center; justify-content: center; 
+            background: #fff; cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .img-slot:hover { border-color: #4CAF50; background: #f0fff0; }
+        .img-slot span { color: #888; font-size: 12px; pointer-events: none; }
+        
+        /* The Image Style */
+        .img-slot img { 
+            width: 184px; height: 88px; filter: grayscale(100%); 
+            object-fit: cover; position: absolute; top: 0; left: 0; 
+        }
+        
+        input[type="file"] { display: none; } /* Hide the ugly default buttons */
     </style>
 </head>
 <body>
 
 <div class="table-container">
     <table>
-        <thead><tr><th>Time Schedule</th></tr></thead>
+        <thead><tr><th>Time</th></tr></thead>
         <tbody id="scheduleBody"></tbody>
     </table>
 </div>
 
 <div class="upload-container">
-    <h2>Load 10 Images (184x88 BW)</h2>
-    <input type="file" id="fileInput" multiple accept="image/*">
+    <h2>Schedule Images (184x88)</h2>
+    <p>Click any slot below to upload an image:</p>
     <div class="image-grid" id="imageGrid"></div>
 </div>
 
 <script>
-    // 1. Generate Table from 00:00 to 23:57 (Step 3 min)
+    // 1. Generate 3-minute interval table
     const tbody = document.getElementById('scheduleBody');
-    for (let minutes = 0; minutes < 24 * 60; minutes += 3) {
-        const hh = String(Math.floor(minutes / 60)).padStart(2, '0');
-        const mm = String(minutes % 60).padStart(2, '0');
-        const row = `<tr><td>${hh}:${mm}</td></tr>`;
-        tbody.innerHTML += row;
+    for (let min = 0; min < 1440; min += 3) {
+        const h = String(Math.floor(min / 60)).padStart(2, '0');
+        const m = String(min % 60).padStart(2, '0');
+        tbody.innerHTML += `<tr><td>${h}:${m}</td></tr>`;
     }
 
-    // 2. Handle Image Loading (Max 10)
-    const fileInput = document.getElementById('fileInput');
+    // 2. Create 10 clickable slots
     const imageGrid = document.getElementById('imageGrid');
-
-    // Create 10 empty slots
     for (let i = 0; i < 10; i++) {
+        // Create the slot div
         const slot = document.createElement('div');
         slot.className = 'img-slot';
-        slot.innerHTML = '<span>Slot ' + (i + 1) + '</span>';
+        slot.innerHTML = `<span>Click to Load Slot ${i + 1}</span>`;
+        
+        // Create a hidden file input for THIS specific slot
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        
+        // When slot is clicked, trigger the hidden input
+        slot.onclick = () => input.click();
+
+        // When file is chosen, update the slot image
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    slot.innerHTML = `<img src="${event.target.result}">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
         imageGrid.appendChild(slot);
     }
-
-    fileInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files).slice(0, 10);
-        const slots = document.querySelectorAll('.img-slot');
-        
-        files.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                slots[index].innerHTML = `<img src="${event.target.result}">`;
-            };
-            reader.readAsDataURL(file);
-        });
-    });
 </script>
 
 </body>
 </html>
+
 
 
 
